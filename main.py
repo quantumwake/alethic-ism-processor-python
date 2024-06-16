@@ -18,11 +18,21 @@ MSG_MANAGE_TOPIC = os.environ.get("MSG_MANAGE_TOPIC", "ism_python_executor_manag
 MSG_TOPIC_SUBSCRIPTION = os.environ.get("MSG_TOPIC_SUBSCRIPTION", "ism_python_executor_subscription")
 
 # database related
-STATE_DATABASE_URL = os.environ.get("STATE_DATABASE_URL", "postgresql://postgres:postgres1@localhost:5432/postgres")
+DATABASE_URL = os.environ.get("DATABASE_URL", "postgresql://postgres:postgres1@localhost:5432/postgres")
+
+# Message Routing File (
+#   The responsibility of this state sync store is to take inputs and
+#   store them into a consistent state storage class. After, the intent is
+#   to automatically route the newly synced data to the next state processing unit
+#   route them to the appropriate destination, as defined by the
+#   route selector
+# )
+ROUTING_FILE = os.environ.get("ROUTING_FILE", '.routing.yaml')
+LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO")
 
 # state storage specifically to handle this processor state (stateless obj)
 storage = PostgresDatabaseStorage(
-    database_url=STATE_DATABASE_URL,
+    database_url=DATABASE_URL,
     incremental=True
 )
 
@@ -38,7 +48,7 @@ messaging_provider = PulsarMessagingConsumerProvider(
 pulsar_router_provider = PulsarMessagingProducerProvider()
 router = Router(
     provider=pulsar_router_provider,
-    yaml_file="routing.yaml"
+    yaml_file=ROUTING_FILE
 )
 
 # find the monitor route for telemetry updates
