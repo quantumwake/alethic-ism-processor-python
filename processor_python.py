@@ -41,6 +41,9 @@ class PythonProcessor(BaseProcessor):
     def create_runnable_class_instance(self) -> BaseRunnable:
         new_class_content = self.template
 
+        if not new_class_content:
+            raise ValueError(f'unable execute blank template for state route id: {self.output_processor_state.id}')
+
         # Compile the restricted code
         compiled_code = compile_restricted(new_class_content, '<string>', 'exec')
 
@@ -102,9 +105,7 @@ class PythonProcessor(BaseProcessor):
 
     def apply_states(self, query_states: [dict]):
         route_message = {
-            "provider_id": self.provider.id,
-            "processor_id": self.processor.id,
-            "state_id": self.output_state.id,
+            "route_id": self.output_processor_state.id,
             "type": "query_state_list",
             "query_state_list": query_states
         }
