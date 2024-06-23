@@ -103,7 +103,7 @@ class PythonProcessor(BaseProcessor):
         output_query_states = self.runnable.process_query_states(query_states=[input_query_state])
         return self.apply_states(output_query_states)
 
-    def apply_states(self, query_states: [dict]):
+    async def apply_states(self, query_states: [dict]):
         route_message = {
             "route_id": self.output_processor_state.id,
             "type": "query_state_list",
