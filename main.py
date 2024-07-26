@@ -1,14 +1,20 @@
-import json
+import asyncio
 import os
 import dotenv
-from core.base_message_consumer_state import BaseMessagingConsumerState
-from core.base_message_router import Router
-from core.base_model import ProcessorProvider, Processor, ProcessorState
-from core.base_processor import StatePropagationProviderDistributor, StatePropagationProviderRouterStateSyncStore, \
+from core.base_model import (
+    Processor,
+    ProcessorProvider,
+    ProcessorState
+)
+from core.base_processor import (
+    StatePropagationProviderDistributor,
+    StatePropagationProviderRouterStateSyncStore,
     StatePropagationProviderRouterStateRouter
+)
+from core.messaging.base_message_consumer_processor import BaseMessageConsumerProcessor
+from core.messaging.base_message_router import Router
+from core.messaging.nats_message_provider import NATSMessageProvider
 from core.processor_state import State
-from core.pulsar_message_producer_provider import PulsarMessagingProducerProvider
-from core.pulsar_messaging_provider import PulsarMessagingConsumerProvider
 from db.processor_state_db_storage import PostgresDatabaseStorage
 
 from processor_python import PythonProcessor
@@ -38,35 +44,29 @@ storage = PostgresDatabaseStorage(
     incremental=True
 )
 
-messaging_provider = PulsarMessagingConsumerProvider(
-    message_url=MSG_URL,
-    message_topic=MSG_TOPIC,
-    message_topic_subscription=MSG_TOPIC_SUBSCRIPTION,
-    management_topic=MSG_MANAGE_TOPIC
-)
-
-
 # routing the persistence of individual state entries to the state sync store topic
-pulsar_router_provider = PulsarMessagingProducerProvider()
+message_provider = NATSMessageProvider()
 router = Router(
-    provider=pulsar_router_provider,
+    provider=message_provider,
     yaml_file=ROUTING_FILE
 )
 
 # find the monitor route for telemetry updates
-monitor_route = router.find_router("processor/monitor")
-state_router_route = router.find_router("processor/monitor")
-sync_store_route = router.find_router('state/sync/store')
+monitor_route = router.find_route("processor/monitor")
+state_router_route = router.find_route("processor/state/router")
+state_sync_route = router.find_route('processor/state/sync')
+python_route_subscriber = router.find_route_by_subject("processor.executor.python")
 
 # state_router_route = router.find_router("processor/monitor")
 state_propagation_provider = StatePropagationProviderDistributor(
     propagators=[
-        StatePropagationProviderRouterStateSyncStore(route=router.find_router('state/sync/store')),
-        StatePropagationProviderRouterStateRouter(route=router.find_router('state/router'))
+        StatePropagationProviderRouterStateSyncStore(route=state_sync_route),
+        StatePropagationProviderRouterStateRouter(route=state_router_route)
     ]
 )
 
-class MessagingConsumerPython(BaseMessagingConsumerState):
+
+class MessagingConsumerPython(BaseMessageConsumerProcessor):
 
     def create_processor(self,
                          processor: Processor,
@@ -97,11 +97,10 @@ class MessagingConsumerPython(BaseMessagingConsumerState):
 
 if __name__ == '__main__':
     consumer = MessagingConsumerPython(
-        name="MessagingConsumerPython",
         storage=storage,
-        messaging_provider=messaging_provider,
+        route=python_route_subscriber,
         monitor_route=monitor_route
     )
 
     consumer.setup_shutdown_signal()
-    consumer.start_topic_consumer()
+    asyncio.get_event_loop().run_until_complete(consumer.start_consumer())

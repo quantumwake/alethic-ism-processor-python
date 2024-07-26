@@ -6,8 +6,6 @@ import requests
 from RestrictedPython import compile_restricted, safe_globals, utility_builtins
 from RestrictedPython.Eval import default_guarded_getitem, default_guarded_getiter
 from RestrictedPython.Guards import full_write_guard, safer_getattr, guarded_iter_unpack_sequence, guarded_setattr
-from core.base_message_router import Router
-from core.base_model import ProcessorState
 from core.base_processor import BaseProcessor
 from core.processor_state import StateConfigCode, State
 from core.processor_state_storage import StateMachineStorage
@@ -101,13 +99,20 @@ class PythonProcessor(BaseProcessor):
 
     async def process_input_data_entry(self, input_query_state: dict, force: bool = False):
         output_query_states = self.runnable.process_query_states(query_states=[input_query_state])
-        return self.apply_states(output_query_states)
 
-    async def apply_states(self, query_states: [dict]):
-        route_message = {
-            "route_id": self.output_processor_state.id,
-            "type": "query_state_list",
-            "query_state_list": query_states
-        }
+        await self.finalize_result(
+            input_query_state=input_query_state,
+            result=output_query_states,
+            additional_query_state=None
+        )
+        # return self.apply_states(output_query_states)
 
-        self.sync_store_route.send_message(json.dumps(route_message))
+    #
+    # async def apply_states(self, query_states: [dict]):
+    #     route_message = {
+    #         "route_id": self.output_processor_state.id,
+    #         "type": "query_state_list",
+    #         "query_state_list": query_states
+    #     }
+    #
+    #     await self.sync_store_route.(json.dumps(route_message))
