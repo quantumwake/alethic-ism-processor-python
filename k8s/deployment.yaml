@@ -30,6 +30,7 @@ spec:
             subPath: .routing.yaml
             readOnly: true
         env:
+          # Log Level
           - name: LOG_LEVEL
             valueFrom:
               secretKeyRef:
