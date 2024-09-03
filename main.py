@@ -58,12 +58,14 @@ monitor_route = router.find_route("processor/monitor")
 state_router_route = router.find_route("processor/state/router")
 state_sync_route = router.find_route('processor/state/sync')
 python_route_subscriber = router.find_route_by_subject("processor.executor.python")
+state_stream_route = router.find_route("processor/state")
+usage_route = router.find_route("processor/usage")
 
 # state_router_route = router.find_router("processor/monitor")
 state_propagation_provider = StatePropagationProviderDistributor(
     propagators=[
         StatePropagationProviderRouterStateSyncStore(route=state_sync_route),
-        StatePropagationProviderRouterStateRouter(route=state_router_route)
+        StatePropagationProviderRouterStateRouter(route=state_router_route, storage=storage)
     ]
 )
 
@@ -85,6 +87,10 @@ class MessagingConsumerPython(BaseMessageConsumerProcessor):
             provider=provider,
             processor=processor,
             output_processor_state=output_processor_state,
+
+            # stream outputs
+            stream_route=state_stream_route,
+            usage_route=usage_route,
 
             # state information routing routers
             monitor_route=self.monitor_route,

@@ -1,5 +1,5 @@
 import json
-from typing import List, Dict
+from typing import List, Dict, Any
 
 import dotenv
 import requests
@@ -24,13 +24,16 @@ class BaseRunnable:
                  storage: StateMachineStorage,
                  **kwargs):
 
-        self.storage = storage
+        self._storage = storage
         self.output_state = output_state
         self.properties = {}
 
         super().__init__()
 
     def process_query_states(self, query_states: List[Dict]) -> List[Dict]:
+        raise NotImplementedError()
+
+    def process_stream(self, query_state: Any):
         raise NotImplementedError()
 
 
@@ -61,6 +64,15 @@ class PythonProcessor(BaseProcessor):
             'requests': requests,  # Allow 'requests' module
             'List': List,
             'Dict': Dict,
+            'dict': dict,
+            'list': list,
+            'str': str,
+            'int': int,
+            'float': float,
+            'bool': bool,
+            'Any': Any,
+            'json': json,
+            'log': log,
             **utility_builtins
         })
 
@@ -99,13 +111,17 @@ class PythonProcessor(BaseProcessor):
 
     async def process_input_data_entry(self, input_query_state: dict, force: bool = False):
         output_query_states = self.runnable.process_query_states(query_states=[input_query_state])
-
         await self.finalize_result(
             input_query_state=input_query_state,
             result=output_query_states,
             additional_query_state=None
         )
-        # return self.apply_states(output_query_states)
+
+    async def _stream(self, input_data: Any, template: str):
+        # Iterate through the synchronous generator
+        for data in self.runnable.process_stream(input_data):
+            # Yield the data asynchronously
+            yield data
 
     #
     # async def apply_states(self, query_states: [dict]):
