@@ -7,6 +7,7 @@ from RestrictedPython import compile_restricted, safe_globals, utility_builtins
 from RestrictedPython.Eval import default_guarded_getitem, default_guarded_getiter
 from RestrictedPython.Guards import full_write_guard, safer_getattr, guarded_iter_unpack_sequence, guarded_setattr
 from core.base_processor import BaseProcessor
+from core.monitored_processor_state import MonitoredUsage
 from core.processor_state import StateConfigCode, State
 from core.processor_state_storage import StateMachineStorage
 
@@ -37,10 +38,10 @@ class BaseRunnable:
         raise NotImplementedError()
 
 
-class PythonProcessor(BaseProcessor):
+class PythonProcessor(BaseProcessor, MonitoredUsage):
 
     def create_runnable_class_instance(self) -> BaseRunnable:
-        new_class_content = self.template
+        new_class_content = self.template.template_content
 
         if not new_class_content:
             raise ValueError(f'unable execute blank template for state route id: {self.output_processor_state.id}')
@@ -97,7 +98,8 @@ class PythonProcessor(BaseProcessor):
     def template(self):
         if self.config.template_id:
             template = self.storage.fetch_template(self.config.template_id)
-            return template.template_content
+            return template
+
         return None
 
     # TODO remove once core is reinstalled
