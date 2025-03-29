@@ -1,10 +1,9 @@
 from typing import Any
 import dotenv
-
-from core.base_processor import BaseProcessor
-from core.compiler.secure_runnable import SecureRunnableBuilder, SecurityConfig
-from core.monitored_processor_state import MonitoredUsage
-from core.processor_state import StateConfigCode
+from ismcore.compiler.secure_runnable import SecurityConfig, SecureRunnableBuilder
+from ismcore.model.processor_state import StateConfigCode
+from ismcore.processor.base_processor import BaseProcessor
+from ismcore.processor.monitored_processor_state import MonitoredUsage
 
 from logger import log
 

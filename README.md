@@ -1,28 +1,49 @@
-# Instruction-Based State Machine (Python Processor)
+# Alethic Instruction-Based State Machine (Anthropic Processor)
 
-The following processor waits on events from pulsar (but can be extended to use kafka or any pub/sub system)
+## Overview
+A processor module for the Alethic ISM that handles Anthropic AI model interactions. 
 
-# Installation via conda
-Checkout the ISM core and ISM db repository and build for  
-- * modify the environment_local.yml to reflect your environment path for the ISM core and ISM db packages.
-- 
-- conda env create -f environment_local.yml  
-- conda activate alethic-ism-processor-python
+This processor:
+- Accepts input states and their associated instructions and state configutation.
+- Processes inputs through Anthropic's AI models, returning results and future processing instructions.
+- Outputs states containing derived results and forwards them back onto the ISM network.
+- Ensures type compatibility with connected processors.
 
-# Installation
-- conda install pulsar-client
-- conda install pydantic
-- conda install python-dotenv
-- conda install tenacity
-- conda install pyyaml
-- conda install restrictedpython
-- conda install psycopg2
+## Build Docker Image
 
-# Remote Alethic Dependencies (if avail otherwise build locally)
-- conda install alethic-ism-core
-- conda install alethic-ism-db
+```bash
+make docker
+```
 
-# Local Dependency (build locally if not using remote channel)
-- conda install -c ~/miniconda3/envs/local_channel alethic-ism-core
-- conda install -c ~/miniconda3/envs/local_channel alethic-ism-db
+## Environment Initialization
+- Create environment: `conda env create -f environment.yaml`.
+- Activate environment: `conda activate alethic-ism-processor-anthropic`.
 
+## Troubleshooting
+For pydantic and anthropic version issues on Apple Silicon (M3 Max):
+- Force remove pydantic: `conda uninstall pydantic --force-remove`.
+- Reinstall pydantic without dependencies: `conda install pydantic --no-deps`.
+- Install annotated-types: `conda install annotated-types`.
+
+## Alethic Dependencies
+- `conda install quantumwake::alethic-ism-core`
+- `conda install quantumwake::alethic-ism-db`
+
+- Local: Install from the local channel if remote versions aren't available.
+
+## Testing
+- ** testing is not exactly working right now **
+- Install pytest: `conda install pytest`.
+
+## Contribution
+Contributions, questions, and feedback are highly encouraged. Contact us for any queries or suggestions.
+
+## License
+Released under GNU3 license.
+
+## Acknowledgements
+Special thanks to Alethic Research, Princeton University Center for Human Values, and New York University.
+
+---
+
+For more updates and involvement opportunities, visit the [Alethic ISM GitHub page](https://github.com/quantumwake/alethic) or create an issue/comment ticket.
