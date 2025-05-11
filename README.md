@@ -1,129 +1,32 @@
-# Alethic Instruction-Based State Machine (Python Processor)
+# Alethic Instruction-Based State Machine (API)
 
-```python
-## Template to customize a python state
-class Runnable(BaseSecureRunnable):
-    ## any initialization parameters you want to save (on a per event basis)
-    def init(self):
-        self.context['counter'] = 0
+The Alethic ISM API is the primary entry point for the Alethic ISM UI and the rest of the Alethic ISM platform. 
 
-    ## if the state is using a python state type
-    def process(self, queries: List[Any]) -> List[Any]:
-        logger.info(queries)
-        return [{
-            **self.query_stock(query),
-            **query
-        } for query in queries]
+**Key Points:**
+- **Processors**: These are engines that transform an input 'State' into an output 'State'.
+- **Current Focus**: Our primary processors are for language processing – Anthropic and OpenAI – with more in development.
+- **Configurations**: Each processor uses a State, typically configured through StateConfigLM.
+- **StateConfig**: Includes basic settings like name, version, and storage engine.
+- **StateConfigLM**: Handles user_templates, system_templates, model names, and provider names.
+- **Data Handling**: Processors manage a dataset of key-value pairs, forming a tabular dataset, with each pair processed according to the implemented Processor's functionality.
 
-    ## if the state is using a stream state type
-    def process_stream(self, query: Dict) -> Any:
-        yield json.dumps({
-            **query,
-            **self.query_stock(query)
-        }, indent=2)
-```
+**Building from Source**
+- **Prerequisites**: Python (versions >=10 and <=11), Conda (preferably miniconda).
+- **Repositories to Clone**:
+  - `git clone https://github.com/quantumwake/alethic-ism-core.git`
 
-#### Example of a runnable that uses the `process` method to process queries add a counter and return the result:
+**Docker Build:**
+- Use `./docker_build.sh -t krasaee/alethic-ism-api:local` to build a Docker image
 
-```python
-class Runnable(BaseSecureRunnable):
-    def init(self):
-        self.context['counter'] = 0
+** Required Packages (not available in conda)
+- `pip install uv`
 
-    def process(self, queries: List[Any]) -> List[Any]:
+## License
+Alethic ISM is under a DUAL licensing model, please refer to [LICENSE.md](LICENSE.md).
 
-        c = self.context['counter']
-        self.context['counter'] = c + 1
-        self.context['other'] = f"other_{c}"
+**AGPL v3**  
+Intended for academic, research, and nonprofit institutional use. As long as all derivative works are also open-sourced under the same license, you are free to use, modify, and distribute the software.
 
-        return [{
-            'index': self.context['counter'],
-            **query
-        } for query in queries]
+**Commercial License**
+Intended for commercial use, including production deployments and proprietary applications. This license allows for closed-source derivative works and commercial distribution. Please contact us for more information.
 
-    def process_stream(self, queries: List[Any]) -> Any:
-        # yield from (self.process(query) for query in queries)
-        pass
-```
-
-#### Example of a runnable that uses the `get_stock_data` method to get stock data:
-```python
-class Runnable(BaseSecureRunnable):
-    def init(self):
-        self.context['counter'] = 0
-
-    def process(self, queries: List[Any]) -> List[Any]:
-        self.logger.info("test message")
-        ticker = "AAPL"
-        stock_data = self.get_stock_data(ticker)
-        if stock_data:
-            stock_data = stock_data['Time Series (5min)']
-            stock_data = list(stock_data.items())[0]
-            stock_data = stock_data[1]
-
-        return [{
-            'ticker': ticker,
-            **stock_data,
-            **query
-        } for query in queries]
-
-    def process_stream(self, query: Dict) -> Any:
-        yield json.dumps(query, indent=2)
-    
-```
-
-#### Basic input -> output direct feed
-```python
-class Runnable(BaseSecureRunnable):
-    def init(self):
-        self.context['counter'] = 0
-
-    def process(self, queries: List[Any]) -> List[Any]:
-        return [{
-            **self.query_stock(query),
-            **query
-        } for query in queries]
-
-    def process_stream(self, query: Dict) -> Any:
-        yield json.dumps({
-            **query,
-            **self.query_stock(query)
-        }, indent=2)
-```
-
-#### Example of a runnable that uses the `query_stock` method to get stock data:
-```python
-
-config = SecurityConfig(
-    max_memory_mb=100,
-    max_cpu_time_seconds=5,
-    max_requests=50,
-    allowed_domains=["*"],
-    execution_timeout=10,
-    enable_resource_limits=False
-)
-
-try:
-    # Create builder
-    builder = SecureRunnableBuilder(config)
-
-    # Compile and instantiate the runnable
-    runnable = builder.compile(user_code3)
-
-    # Use the runnable
-    # for i in range(5):
-    #   result = runnable.process(queries=[{'test': 'data'}])
-    #   print(f"Query result: {result}")
-
-    result = runnable.process(queries=[{'is_stock_question': 'true', 'ticker': 'AAPL'}])
-    print(f"Query result: {result}")
-
-    # batch_result = runnable.process_async([
-    #     {'test': 'data1'},
-    #     {'test': 'data2'}
-    # ])
-    # print(f"Batch result: {batch_result}")
-except Exception as e:
-    print(f"Error: {str(e)}")
-
-```
