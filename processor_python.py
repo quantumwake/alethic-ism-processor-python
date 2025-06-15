@@ -71,13 +71,3 @@ class PythonProcessor(BaseProcessor, MonitoredUsage):
         for data in self.runnable.process_stream(input_data):
             # Yield the data asynchronously
             yield data
-
-    #
-    # async def apply_states(self, query_states: [dict]):
-    #     route_message = {
-    #         "route_id": self.output_processor_state.id,
-    #         "type": "query_state_list",
-    #         "query_state_list": query_states
-    #     }
-    #
-    #     await self.sync_store_route.(json.dumps(route_message))
