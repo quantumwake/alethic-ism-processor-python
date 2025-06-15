@@ -66,14 +66,6 @@ class PythonProcessor(BaseProcessor, MonitoredUsage):
             additional_query_state=None
         )
 
-    async def process_input_data_set(self, input_query_states: List[dict], force: bool = False):
-        output_query_states = self.runnable.process(queries=input_query_states)
-        await self.finalize_result(
-            result=output_query_states,
-            input_data=input_query_states,
-            additional_query_state=None
-        )
-
     async def _stream(self, input_data: Any, template: str):
         # Iterate through the synchronous generator
         for data in self.runnable.process_stream(input_data):
