@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, List
 import dotenv
 from ismcore.compiler.secure_runnable import SecurityConfig, SecureRunnableBuilder
 from ismcore.model.processor_state import StateConfigCode
@@ -58,8 +58,16 @@ class PythonProcessor(BaseProcessor, MonitoredUsage):
     async def process_input_data_entry(self, input_query_state: dict, force: bool = False):
         output_query_states = self.runnable.process(queries=[input_query_state])
         await self.finalize_result(
-            input_query_state=input_query_state,
+            input_data=input_query_state,
             result=output_query_states,
+            additional_query_state=None
+        )
+
+    async def process_input_data_set(self, input_query_states: List[dict], force: bool = False):
+        output_query_states = self.runnable.process(queries=input_query_states)
+        await self.finalize_result(
+            result=output_query_states,
+            input_data=input_query_states,
             additional_query_state=None
         )
 
