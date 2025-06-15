@@ -1,4 +1,4 @@
-from typing import Any, List
+from typing import Any
 import dotenv
 from ismcore.compiler.secure_runnable import SecurityConfig, SecureRunnableBuilder
 from ismcore.model.processor_state import StateConfigCode
