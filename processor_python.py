@@ -55,10 +55,13 @@ class PythonProcessor(BaseProcessor, MonitoredUsage):
     def config(self) -> StateConfigCode:
         return self.output_state.config
 
-    async def process_input_data_entry(self, input_query_state: dict, force: bool = False):
-        output_query_states = self.runnable.process(queries=[input_query_state])
+    async def process_input_data(self, input_data: dict, force: bool = False):
+        if isinstance(input_data, dict):
+            input_data = [input_data]
+
+        output_query_states = self.runnable.process(queries=input_data)
         await self.finalize_result(
-            input_data=input_query_state,
+            input_data=input_data,
             result=output_query_states,
             additional_query_state=None
         )
