@@ -49,7 +49,7 @@ class PythonProcessor(BaseProcessor, MonitoredUsage):
             # Compile and instantiate the runnable
             return builder.compile(user_code)
         except Exception as e:
-            print(f"Error: {str(e)}")
+            raise e
 
     @property
     def config(self) -> StateConfigCode:
