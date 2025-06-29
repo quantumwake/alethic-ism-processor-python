@@ -60,6 +60,9 @@ class PythonProcessor(BaseProcessor, MonitoredUsage):
             input_data = [input_data]
 
         output_query_states = self.runnable.process(queries=input_data)
+        if output_query_statelen(output_query_states:
+            return
+
         await self.finalize_result(
             input_data=input_data,
             result=output_query_states,
