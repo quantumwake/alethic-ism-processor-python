@@ -21,9 +21,12 @@ class PythonProcessor(BaseProcessor, MonitoredUsage):
 
         return None
 
-    # TODO remove once core is reinstalled
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        # MonitoredProcessorState.__init__ does not cooperatively call super().__init__,
+        # so MonitoredUsage.__init__ is never reached via the MRO and self.usage_route
+        # would never be set. Initialize it explicitly (matches alethic-ism-processor-openrouter).
+        MonitoredUsage.__init__(self, **kwargs)
         self.runnable = self.create_runnable_class_instance()
 
     def create_runnable_class_instance(self):
@@ -55,21 +58,23 @@ class PythonProcessor(BaseProcessor, MonitoredUsage):
     def config(self) -> StateConfigCode:
         return self.output_state.config
 
-    async def process_input_data(self, input_data: dict, force: bool = False):
+    async def process_input_data(self, input_data: dict, force: bool = False) \
+            -> tuple[dict | list | None, Any]:
         if isinstance(input_data, dict):
             input_data = [input_data]
 
         output_query_states = self.runnable.process(queries=input_data)
         if not output_query_states:
-            return
+            return [], None
 
-        await self.finalize_result(
+        finalized_output = await self.finalize_result(
             input_data=input_data,
             result=output_query_states,
             additional_query_state=None
         )
+        return finalized_output, None
 
-    async def _stream(self, input_data: Any, template: str):
+    async def process_input_data_stream(self, input_data: Any):
         # Iterate through the synchronous generator
         for data in self.runnable.process_stream(input_data):
             # Yield the data asynchronously
